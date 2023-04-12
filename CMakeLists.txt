@@ -81,6 +81,8 @@ if(BUILD_TESTS)
 
     FetchContent_MakeAvailable(Catch2)
 
+    enable_testing()
+
     add_executable(${PROJECT_NAME}_TEST
             test/utils_tests/thread_pool_tests.cpp
             )
@@ -91,4 +93,8 @@ if(BUILD_TESTS)
             )
 
     target_link_libraries(${PROJECT_NAME}_TEST PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME}_LIB)
+
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(${PROJECT_NAME}_TEST)
 endif()
