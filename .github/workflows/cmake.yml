@@ -31,7 +31,7 @@ jobs:
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j 12 --target KanNBan_TEST
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j 12 --target KanNBan_TEST
       
     - name: C/C++ Linter
       # You may pin to the exact commit or the version.
