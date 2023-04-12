@@ -32,8 +32,17 @@ add_source_files(config src
         config.cpp
         )
 
-add_executable(${PROJECT_NAME}
+add_source_files(utils src
+        thread_safe_queue.hpp
+        thread_pool.hpp
+        )
+
+add_library(${PROJECT_NAME}_LIB
         ${config}
+        ${utils}
+        )
+
+add_executable(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
         )
 
@@ -47,10 +56,14 @@ target_link_directories(${PROJECT_NAME} PRIVATE
         "${CLIENTSERVER_DIR}/$<$<CONFIG:Debug>:debug>/lib"
         )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME}_LIB PUBLIC
         Threads::Threads
         nlohmann_json::nlohmann_json
         fmt::fmt
+        )
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+        ${PROJECT_NAME}_LIB
         )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -58,5 +71,30 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND_EXPAND_LISTS)
 
 if(BUILD_TESTS)
-    add_subdirectory(test)
+    Include(FetchContent)
+
+    FetchContent_Declare(
+            Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG        v3.0.1 # or a later release
+    )
+
+    FetchContent_MakeAvailable(Catch2)
+
+    enable_testing()
+
+    add_executable(${PROJECT_NAME}_TEST
+            test/utils_tests/thread_pool_tests.cpp
+            )
+
+    target_include_directories(${PROJECT_NAME}_TEST PRIVATE
+            ${CMAKE_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            )
+
+    target_link_libraries(${PROJECT_NAME}_TEST PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME}_LIB)
+
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(${PROJECT_NAME}_TEST)
 endif()

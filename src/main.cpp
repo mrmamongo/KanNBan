@@ -4,8 +4,8 @@
 
 #include <config/config.hpp>
 #include <fstream>
-#include <iostream>
 #include <fmt/core.h>
+#include <utils/thread_pool.hpp>
 
 kanban_server::config read_config() {
     auto config_file = getenv("CONFIG_FILE");
@@ -20,5 +20,13 @@ kanban_server::config read_config() {
 
 int main() {
     kanban_server::config c = read_config();
-    fmt::print("Server {0} configured:\n\t{1}:{2}", c.app_name, c.api_host, c.api_port);
+    fmt::println("Server {0} configured:\n\t{1}:{2}", c.app_name, c.api_host, c.api_port);
+
+    kanban_server::utils::thread_pool pool;
+
+    pool.init(std::thread::hardware_concurrency());
+
+    pool.async([]() {
+        fmt::println("Started worker");
+    });
 }
