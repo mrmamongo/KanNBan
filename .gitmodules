@@ -1,0 +1,6 @@
+[submodule "third_party/nlohmann_json"]
+	path = third_party/nlohmann_json
+	url = https://github.com/nlohmann/json.git
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git
