@@ -71,5 +71,24 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND_EXPAND_LISTS)
 
 if(BUILD_TESTS)
-    add_subdirectory(test)
+    Include(FetchContent)
+
+    FetchContent_Declare(
+            Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG        v3.0.1 # or a later release
+    )
+
+    FetchContent_MakeAvailable(Catch2)
+
+    add_executable(${PROJECT_NAME}_TEST
+            test/utils_tests/thread_pool_tests.cpp
+            )
+
+    target_include_directories(${PROJECT_NAME}_TEST PRIVATE
+            ${CMAKE_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            )
+
+    target_link_libraries(${PROJECT_NAME}_TEST PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME}_LIB)
 endif()
