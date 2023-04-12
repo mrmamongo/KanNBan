@@ -32,8 +32,17 @@ add_source_files(config src
         config.cpp
         )
 
-add_executable(${PROJECT_NAME}
+add_source_files(utils src
+        thread_safe_queue.hpp
+        thread_pool.hpp
+        )
+
+add_library(${PROJECT_NAME}_LIB
         ${config}
+        ${utils}
+        )
+
+add_executable(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
         )
 
@@ -47,10 +56,14 @@ target_link_directories(${PROJECT_NAME} PRIVATE
         "${CLIENTSERVER_DIR}/$<$<CONFIG:Debug>:debug>/lib"
         )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME}_LIB PUBLIC
         Threads::Threads
         nlohmann_json::nlohmann_json
         fmt::fmt
+        )
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+        ${PROJECT_NAME}_LIB
         )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

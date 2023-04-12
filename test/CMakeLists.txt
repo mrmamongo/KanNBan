@@ -8,5 +8,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(KanNBan_Tests test.cpp)
-target_link_libraries(KanNBan_Tests PRIVATE Catch2::Catch2WithMain)
+add_executable(${PROJECT_NAME}_TEST
+        utils_tests/thread_pool_tests.cpp
+        )
+
+target_include_directories(${PROJECT_NAME}_TEST PRIVATE
+        ..
+        ../src
+        )
+
+target_link_libraries(${PROJECT_NAME}_TEST PRIVATE Catch2::Catch2WithMain ${PROJECT_NAME}_LIB)
