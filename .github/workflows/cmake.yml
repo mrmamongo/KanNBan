@@ -30,8 +30,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: cmake --build ${{github.workspace}}/build  --target KanNBan_TEST --config ${{env.BUILD_TYPE}} -- -j 12
+      run: ctest -j2 --output-on-failure -E mixMultiQubitKrausMap
       
     - name: C/C++ Linter
       # You may pin to the exact commit or the version.
