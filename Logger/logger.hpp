@@ -11,83 +11,47 @@
 #include <ctime>
 #include <functional>
 #include <iostream>
-
-
+#include <atomic>
+#include <condition_variable>
 
 using int_l = std::conditional_t<sizeof(std::time_t) == sizeof(unsigned),
                                  unsigned, unsigned long long>;
 
+std::mutex mutex;
 
-class OutputFile {
+template<class ... Args>
+auto console_out = [](Args&& ... args) { 
+    std::lock_guard<std::mutex> lk(mutex);
+    (std::cout << ... << args) << std::endl;
+};
+
+template<class ... Args>
+auto file_out = [](std::string_view filename,Args&& ... args) {
+    std::ofstream file(std::string(filename),std::ios::app);
+    if (file.is_open())
+        (file << ... << args) << std::endl;
+    file.close();
+};
+
+class Logger {
 private:
-    std::ofstream out;
-    std::string filename;
+    template<class ... Args>
+    void console_out_(Args&& ... args) {
+        console_out<Args...>(std::forward<Args>(args)...);
+    }
+    template<class ... Args>
+    void file_out_(std::string_view filename, Args&& ... args) {
+        file_out<Args...>(filename,std::forward<Args>(args)...);
+    }
 public:
-    virtual int set_filename(const std::string_view& filename) { this->filename = std::string(filename.cbegin(),filename.cend()); return 0;}
-    virtual std::string get_filename() { return filename; }
-    virtual int add_string(const std::string& str) {
-        out.open(filename, std::ios::app);
-        if (!out.is_open())
-            return -1;
-        out << str;
-        return 0;
+    void logc(std::string text) {
+        auto t = static_cast<int_l>(std::time(nullptr));
+        console_out_("[LOG ", t, " ] ", text);
     }
-    virtual int add_vector(const std::vector<std::string>& v) {
-        out.open(filename, std::ios::app);
-        if (!out.is_open())
-            return -1;
-        for (auto& el : v) {
-            out << el;
-        }
-        out.close();
-        return 0;
-    }
-    virtual int clear() {
-        out.open(filename, std::ios::trunc);
-        if (!out.is_open())
-            return -1;
-        return 0;
+    void logf(std::string_view filename, std::string text) {
+        auto t = static_cast<int_l>(std::time(nullptr));
+        file_out_(filename,"[LOG ", t, " ] ", text);
     }
 };
 
 
-class GlobalLogger {
-private:
-    std::mutex mutex;
-    OutputFile* out_file;
-    std::function<int(std::string)> out_console;
-
-public:
-    void set_file(OutputFile* out, std::string_view filename) {
-        out_file = out;
-        out_file->set_filename(filename);
-    }
-    void set_console(std::function<int(std::string)> function) {
-        out_console = function;
-    }
-
-    bool is_file() { return out_file != nullptr; }
-    bool is_console() { return static_cast<bool>(out_console); }
-
-    void log(std::string text) {
-        std::lock_guard<std::mutex> lk(mutex);
-        if (is_file()) {
-            std::vector<std::string> tmp; tmp.reserve(4);
-            tmp.push_back("[");
-            tmp.push_back(std::to_string(static_cast<int_l>(std::time(nullptr))));
-            tmp.push_back("] ");
-            tmp.push_back(text);
-            out_file->add_vector(tmp);
-        }
-        if (is_console()) {
-            out_console("[");
-            out_console(std::to_string(static_cast<int_l>(std::time(nullptr))));
-            out_console("] ");
-            out_console(text);
-        }
-    }  
-
-
-
-
-};
