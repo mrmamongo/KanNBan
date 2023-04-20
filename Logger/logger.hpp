@@ -1,35 +1,31 @@
 #include <mutex>
 
-#include <vector>
 #include <string>
 #include <string_view>
 
 #include <fstream>
 #include <ios>
 
-#include <type_traits>
-#include <ctime>
-#include <functional>
-#include <iostream>
-#include <atomic>
-#include <condition_variable>
+#define FMT_HEADER_ONLY
+#include <fmt/core.h>
 
-using int_l = std::conditional_t<sizeof(std::time_t) == sizeof(unsigned),
-                                 unsigned, unsigned long long>;
+
+
 
 std::mutex mutex;
 
 template<class ... Args>
 auto console_out = [](Args&& ... args) { 
-    std::lock_guard<std::mutex> lk(mutex);
-    (std::cout << ... << args) << std::endl;
+    //std::lock_guard<std::mutex> lk(mutex); // guess we don't need that
+    fmt::print("[LOG][Date {0}] \"{1}\"\n",args...);
 };
 
 template<class ... Args>
 auto file_out = [](std::string_view filename,Args&& ... args) {
+    //auto out = fmt::output_file("guide.txt"); out.print("[LOG][Date {0}] \"{1}\"\n",args...); // TO DO: implement that
     std::ofstream file(std::string(filename),std::ios::app);
     if (file.is_open())
-        (file << ... << args) << std::endl;
+        (file << fmt::format("[LOG][Date {0}] \"{1}\"\n",args...));
     file.close();
 };
 
@@ -43,14 +39,12 @@ private:
     void file_out_(std::string_view filename, Args&& ... args) {
         file_out<Args...>(filename,std::forward<Args>(args)...);
     }
-public:
+public: // TO DO: add normal date
     void logc(std::string text) {
-        auto t = static_cast<int_l>(std::time(nullptr));
-        console_out_("[LOG ", t, " ] ", text);
+        console_out_("",text);
     }
     void logf(std::string_view filename, std::string text) {
-        auto t = static_cast<int_l>(std::time(nullptr));
-        file_out_(filename,"[LOG ", t, " ] ", text);
+        file_out_(filename,"", text);
     }
 };
 
